@@ -621,6 +621,7 @@ MonoBehaviour:
   GhostBeeSprite: {fileID: 21300000, guid: 6b653bd42897d2b42911c73eaa6ed4d2, type: 3}
   BeeSprite: {fileID: 21300000, guid: 2d40601fca492fa43a9d0b6d6c8d5c07, type: 3}
   HexOpen: {fileID: 2100000, guid: 06ff621897970b644838ada51dbfa17b, type: 2}
+  countBee: 0
 --- !u!1 &314326196
 GameObject:
   m_ObjectHideFlags: 0
@@ -845,8 +846,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hexPrefab: {fileID: 280855716}
   LayerCells: {fileID: 314326197}
-  TimeValue: 0
   textTimer: {fileID: 199651630}
+  TimeValue: 0
+  PlayerName: Hoan
 --- !u!4 &757185025
 Transform:
   m_ObjectHideFlags: 0

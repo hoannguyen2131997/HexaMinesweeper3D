@@ -5,7 +5,6 @@ using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-
 public class SetupScene : MonoBehaviour
 {
     [SerializeField]private GameObject hexPrefab;
@@ -22,55 +21,203 @@ public class SetupScene : MonoBehaviour
     public static int HourWin;
     public static int MinWin;
     public static int SecWin;
+
+    public String PlayerName;
     // Start is called before the first frame update
 
     void Start()
     {
+        //PlayerPrefs.DeleteKey("Ranking");
         hexGrid = new GameObject[rowsGrid, columnsGrid];
         //StartCoroutine(Timer());
         CreateHexGrid();
+        
         StartCoroutine(PlayGame());
         //StartCoroutine(DisplayTime(TimeValue));
     }
 
+    private void AddPlayer(string PlayerName)
+    {
+        
+    }
+
     private Coroutine IE1;
-    private float second = 0;
+    private float second;
     private IEnumerator PlayGame()
     {
         while (second < 1f && Cell.EndGame == false)
         {
             second += Time.deltaTime;
         } 
-        yield return new WaitForSeconds (1);
+        yield return new WaitForSeconds(1);
         if (second > 1f)
         {
             second = 0;
             TimeValue++;
             DisplayTime(TimeValue);
             StartCoroutine(PlayGame());
+            if (Cell.EndGame)
+            {
+                EndGame(TimeValue);
+            }
         }
-
-        if (Cell.EndGame)
-        {
-            EndGame(TimeValue);
-        }
-
+        
         yield return null;
     }
-
+    
+    private int hourComplete;
+    private int minComplete;
+    private int secComplete;
+    
     public void EndGame(float TimeValue)
     {
-        HourWin = Mathf.FloorToInt(TimeValue / 3600);
-        MinWin = Mathf.FloorToInt((TimeValue - (3600*HourWin))/60);
-        SecWin = Mathf.FloorToInt((TimeValue -(3600*HourWin)-(MinWin*60)));
-        Debug.Log("End game: " + HourWin + ":" + MinWin + ":" + SecWin);
+        hourComplete = Mathf.FloorToInt(TimeValue / 3600);
+        minComplete = Mathf.FloorToInt((TimeValue - (3600*HourWin))/60);
+        secComplete = Mathf.FloorToInt((TimeValue -(3600*HourWin)-(MinWin*60)));
+        CheckRanking();
+    }
+
+    private float TimeToFloat(string timeToScore)
+    {
+        string[] timeScore = timeToScore.Split(':');
+        //Debug.Log("hour: " + timeScore[0] + " min: " + timeScore[1] + " sec: " + timeScore[2]);
+        float hour = Convert.ToInt32(timeScore[0]);
+        float min = Convert.ToInt32(timeScore[1]);
+        float sec = Convert.ToInt32(timeScore[2]);
+        float totalTimeHistory = hour * 3600 + min * 60 + sec;
+        return totalTimeHistory;
+    }
+    private bool CheckScoreValid(string timeHistoryPlayer)
+    {
+        float totalTimeHistory = TimeToFloat(timeHistoryPlayer);
+        if (TimeValue < totalTimeHistory)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private int GetRankingInBoard(string[] rankBoard)
+    {
+        // Ex Board: Hoan 00:12:30 Tuan 00:15:30 Hieu 00:20:10 
+        // Ex TimeValue: 00:16:00
+        // Result: 3
+        int rank = 1;
+        for (int i = 0; i < rankBoard.Length; i++)
+        {
+            //Debug.Log("rankBoard[i] " + rankBoard[i]);
+            if (i % 2 == 1)
+            {
+                //Debug.Log("rankBoard[i]" + rankBoard[i]);
+                if (TimeValue < TimeToFloat(rankBoard[i]))
+                {
+                    return rank;
+                }
+                rank++;
+            }
+        }
+        //Debug.Log("rank player: " + rank);
+        return rank;
+    }
+    private string UpdateRanking(string[] rankBoard)
+    {
+        int newRank = GetRankingInBoard(rankBoard);
+        string updateRanking = "";
+        int countRank = 0;
+        int positionPlayer;
+        for (int i = 0; i < rankBoard.Length; i++)
+        {
+            
+            // if (i % 2 != 1)
+            // {
+            //     if (i == newRank)
+            //     {
+            //         string data = PlayerName + " " + string.Format("{0:00}:{1:00}:{2:00}",hourComplete, minComplete, secComplete) + " ";
+            //         updateRanking += data;
+            //     }
+            //     // else
+            //     // {
+            //     //     updateRanking = updateRanking + rankBoard[i] + " ";
+            //     // }
+            // }
+            
+            
+        }
+
+        string[] rankNew = new string[rankBoard.Length/2];
+        int count = 0;
+        for (int i = 0; i < rankBoard.Length; i++)
+        {
+            string temp = "";
+            if (i % 2 == 0)
+            {
+                temp += rankBoard[i];
+            }
+            else
+            {
+                rankNew[count] = temp;
+                count++;
+            }
+
+            if (rankBoard[i] == PlayerName)
+            {
+                positionPlayer = i;
+            }
+        }
+
+        // for (int i = 0; i < rankNew.Length; i++)
+        // {
+        //     if()
+        // }
+
+        return updateRanking;
+    }
+    // 0 : not add ranking 
+    // 1 2 3: is player position in board
+    void AddRanking(string rankBoard)
+    {
+       
+        string[] word = rankBoard.Split(' ');
         
-        // PlayerPrefs.SetString("hihi", "Hoan");
-        //
-        // PlayerPrefs.Save();
-        
-        // PlayerPrefs.DeleteAll();
-        // Debug.Log(PlayerPrefs.GetString("hihi"));
+        for (int i = 0; i < word.Length; i++)
+        {
+            if (word[i] == PlayerName)
+            {
+                string timeHistoryPlayer = word[i + 1];
+                Debug.Log("timeHistoryPlayer" + timeHistoryPlayer);
+                if (CheckScoreValid(timeHistoryPlayer))
+                {
+                    PlayerPrefs.DeleteKey("Ranking");
+                    string result = UpdateRanking(word);
+                    PlayerPrefs.SetString("Ranking", result);
+                    Debug.Log("result ranking: " + PlayerPrefs.GetString("Ranking"));
+                }
+            } else
+            {
+                Debug.Log("current ranking: " + PlayerPrefs.GetString("Ranking"));
+            }
+        }
+    }
+    void CheckRanking()
+    {
+        //Debug.Log($"Player {PlayerName} - Time complete game: {hourComplete}:{minComplete}:{secComplete}");
+        //PlayerPrefs.DeleteAll();
+        String value = PlayerName + " " + string.Format("{0:00}:{1:00}:{2:00}",hourComplete, minComplete, secComplete) + " ";
+        if (!PlayerPrefs.HasKey("Ranking"))
+        {
+            // Debug.Log("Ranking not found! - create ranking - add first player");
+            // Debug.Log("Value: " + value);
+            PlayerPrefs.SetString("Ranking", value);
+        }
+        else
+        {
+            string temp = PlayerPrefs.GetString("Ranking");
+            temp += value;
+            Debug.Log("value return database: " + temp);
+            PlayerPrefs.SetString("Ranking", temp);
+            Debug.Log("value return database: " + PlayerPrefs.GetString("Ranking"));
+            AddRanking(temp);
+        }
     }
     
     private void DisplayTime(float TimeValue)
