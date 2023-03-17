@@ -1,6 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 
 public class SetupScene : MonoBehaviour
@@ -9,17 +12,99 @@ public class SetupScene : MonoBehaviour
 
     public static int rowsGrid = 10;
     public static int columnsGrid = 20;
-    private static int numberOfBees = 30;
+    public static int numberOfBees = 5;
     public Transform LayerCells;
     private static GameObject[,] hexGrid;
-    
+   
+    public TextMeshPro textTimer;
+    public float TimeValue = 0;
+   
+    public static int HourWin;
+    public static int MinWin;
+    public static int SecWin;
     // Start is called before the first frame update
+
     void Start()
     {
         hexGrid = new GameObject[rowsGrid, columnsGrid];
+        //StartCoroutine(Timer());
         CreateHexGrid();
+        StartCoroutine(PlayGame());
+        //StartCoroutine(DisplayTime(TimeValue));
     }
 
+    private Coroutine IE1;
+    private float second = 0;
+    private IEnumerator PlayGame()
+    {
+        while (second < 1f && Cell.EndGame == false)
+        {
+            second += Time.deltaTime;
+        } 
+        yield return new WaitForSeconds (1);
+        if (second > 1f)
+        {
+            second = 0;
+            TimeValue++;
+            DisplayTime(TimeValue);
+            StartCoroutine(PlayGame());
+        }
+
+        if (Cell.EndGame)
+        {
+            EndGame(TimeValue);
+        }
+
+        yield return null;
+    }
+
+    public void EndGame(float TimeValue)
+    {
+        HourWin = Mathf.FloorToInt(TimeValue / 3600);
+        MinWin = Mathf.FloorToInt((TimeValue - (3600*HourWin))/60);
+        SecWin = Mathf.FloorToInt((TimeValue -(3600*HourWin)-(MinWin*60)));
+        Debug.Log("End game: " + HourWin + ":" + MinWin + ":" + SecWin);
+        
+        // PlayerPrefs.SetString("hihi", "Hoan");
+        //
+        // PlayerPrefs.Save();
+        
+        // PlayerPrefs.DeleteAll();
+        // Debug.Log(PlayerPrefs.GetString("hihi"));
+    }
+    
+    private void DisplayTime(float TimeValue)
+    {
+        if (TimeValue < 0)
+        {
+            TimeValue = 0;
+        }
+         
+        int hour = Mathf.FloorToInt(TimeValue / 3600);
+        int min = Mathf.FloorToInt((TimeValue - (3600*hour))/60);
+        int sec = Mathf.FloorToInt((TimeValue -(3600*hour)-(min*60)));
+        //Debug.Log("TimeValue1 " + TimeValue);
+        textTimer.text = string.Format("{0:00}:{1:00}:{2:00}",hour, min, sec);
+    }
+    
+    public static int GetCountCell()
+    {
+        int count = 0;
+       
+        for (int i = 0; i < rowsGrid; i++)
+        {
+            for (int j = 0; j < columnsGrid; j++)
+            {
+                if (hexGrid[i, j].GetComponent<Cell>().isHexOpen == false)
+                {
+                    count++;
+                }
+            }
+        }
+        
+        return count;
+    }
+    
     private void CreateHexGrid()
     {
         float width = hexPrefab.GetComponent<MeshCollider>().bounds.size.x;
@@ -43,25 +128,22 @@ public class SetupScene : MonoBehaviour
             }
         }
     }
-
-    public static int getCountBee()
-    {
-        return numberOfBees;
-    }
+    
     public static void InsertBees(int rowIndex, int columnIndex)
     {
-        while (numberOfBees != 0)
+        int count = numberOfBees;
+        while (count != 0)
         {
             int randomRowIndex = Random.Range(0, rowsGrid); 
             int randomColumnIndex = Random.Range(0, columnsGrid);
-
+        
             if (hexGrid[randomRowIndex, randomColumnIndex].GetComponent<Cell>().CellValue != -1 && IsBeeNearToStart(rowIndex, columnIndex, randomRowIndex, randomColumnIndex) == false)
             {
                 hexGrid[randomRowIndex, randomColumnIndex].GetComponent<Cell>().CellValue = -1;
-                numberOfBees--;
+                count--;
             }
         }
-    
+
         for (int i = 0; i < rowsGrid; i++)
         {
             for (int j = 0; j < columnsGrid; j++)
@@ -81,7 +163,7 @@ public class SetupScene : MonoBehaviour
         bool isAdjacentRow = beeRow > startRow + 2 || beeRow < startRow - 2 ? false : true;
         bool isAdjacentColumn = beeCol > startCol + 2 || beeCol < startCol - 2 ? false : true;
 
-        if (isAdjacentRow == true && isAdjacentColumn == true)
+        if (isAdjacentRow && isAdjacentColumn)
         {
             return true;
         }
@@ -94,10 +176,9 @@ public class SetupScene : MonoBehaviour
         {
             return true;
         }
-
         return false;
     }
-
+    
     public static void ShowCells(int rowIndex, int ColumnIndex)
     {
         Cell currentCell = hexGrid[rowIndex, ColumnIndex].GetComponent<Cell>();
@@ -149,14 +230,14 @@ public class SetupScene : MonoBehaviour
                     }
                 }
             }
-
+            
             if (currentCell.CellValue == 0)
             {
                 currentCell.UpdateUI();
             }
         }
     }
-
+    
     public static void ShowAllBees()
     {
         for (int i = 0; i < rowsGrid; i++)

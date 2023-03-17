@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,8 +16,8 @@ public class Cell : MonoBehaviour
     public Sprite GhostBeeSprite;
     public Sprite BeeSprite;
     public Material HexOpen;
-
     private static bool hasGameBegun;
+    public static bool EndGame;
     public int CellValue
     {
         get
@@ -33,16 +34,18 @@ public class Cell : MonoBehaviour
                 cellValue = 6;
             }
             else cellValue = value;
-
-                // if (value == -1)
+            
+            // if (value == -1)
             // {
             //     Bee.SetActive(true);
             // }
         }
     }
+
+    public int countBee;
     public void OnMouseDown()
     {
-        Debug.Log("count bee" + SetupScene.getCountBee());
+       
         if (IsGhostBeeToggle.CheckGhostBeeToggle == true)
         {
             UpdateUI();
@@ -53,20 +56,28 @@ public class Cell : MonoBehaviour
             {
                 SetupScene.InsertBees(CellRowIndex, CellColumnIndex);
                 hasGameBegun = true;
+                
             }
             if (flagged == false)
             {
                 if (CellValue == -1)
                 {
                     SetupScene.ShowAllBees();
+                    EndGame = true;
                 }
                 else
                 {
                     SetupScene.ShowCells(CellRowIndex, CellColumnIndex);
+                    countBee = SetupScene.numberOfBees;
+                    if (SetupScene.GetCountCell() == countBee)
+                    {
+                        EndGame = true;
+                    }
                 }
             }
         }
     }
+    
     public void CheckSurroundingCellsForBees()
     {
         if (cellValue == -1)
@@ -111,7 +122,7 @@ public class Cell : MonoBehaviour
             }
         }
     }
-
+    
     public void UpdateUI()
     {
         if (IsGhostBeeToggle.CheckGhostBeeToggle == true)
@@ -139,7 +150,7 @@ public class Cell : MonoBehaviour
             if (flagged == false)
             {
                 GetComponent<Renderer>().material = HexOpen;
-        
+                isHexOpen = true;
                 if (cellValue > 0)
                 {
                     text.gameObject.SetActive(true);

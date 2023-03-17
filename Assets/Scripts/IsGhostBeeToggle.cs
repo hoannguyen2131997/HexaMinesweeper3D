@@ -9,7 +9,7 @@ public class IsGhostBeeToggle : MonoBehaviour
 	private void OnMouseDown()
 	{
 		CheckGhostBeeToggle = !CheckGhostBeeToggle;
-		if (CheckGhostBeeToggle == true)
+		if (CheckGhostBeeToggle)
 		{
 			GetComponent<Renderer>().material.color = Color.blue;
 		}
